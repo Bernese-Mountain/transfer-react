@@ -1,0 +1,9 @@
+li {
+    list-style: none;
+}
+.transfer{
+    display: flex;
+}
+.moveButton{
+    margin-top: 400px;
+}
