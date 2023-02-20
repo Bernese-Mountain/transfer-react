@@ -5,7 +5,7 @@ li {
     display: flex;
 }
 .moveButton{
-    margin-top: 400px;
+    margin-top: 200px;
 }
 
 .pageLeft{
@@ -20,11 +20,15 @@ li {
 .pagination{
     display: flex;
     height: 30px;
-    margin-top: 400px;
+    /* margin-top: 400px; */
 }
 .pageSubtract{
     cursor: pointer;
 }
 .pagePlus{
     cursor: pointer;
+}
+
+ul{
+    padding: 0;
 }

@@ -1,6 +1,6 @@
 import * as React from 'react'
 import './App.css';
-import Search from './compoents/transfer';
+import Search from './compoents/transfer2';
 
 function App() {
     return (

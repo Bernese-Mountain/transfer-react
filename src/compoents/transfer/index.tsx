@@ -1,39 +1,80 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { useState, useEffect } from 'react';
 import './style.css';
 const Search = () => {
     // 初始模拟数据功能区
     const newMockData: { key: string; value: string; move: boolean; }[] = [];
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 200; i++) {
         const data = {
             key: i.toString(),
             value: i.toString(),
-            move: false
+            move: false,
+            checked: false
         };
         newMockData.push(data);
     }
 
     // 搜索功能区域
+    const pageSize = 10;
     const [inputValue, setInputValue] = useState('');
-    const keyWord = inputValue;
-    const filters = (data:any, keyword:any) => {
-        const key = keyword;
+    const [pageNums, setPageNums] = useState(1);
+    // const keyWord = inputValue;
+    const filters = (data:any, inputValue:any,pageNums: number) => {
+        const key = inputValue;
         const retArray: Array<any> = [];
         data.forEach((items: any) => {
             if(items.value.search(key) !== -1){
                 retArray.push(items);
             }
         })
-        return retArray;
+        const ret =[];
+        for(let i = 0;i <data.length ;i++){
+            ((i >= (pageNums-1)*pageSize)&&(i < pageNums*pageSize))? ret.push(data[i]):false;
+        }
+        return ret;
+
     }
-    const filterData = filters(newMockData,keyWord);
+    let filterData = filters(newMockData,inputValue,pageNums);
 
 
     // 全选和取消全选功能区
-    const [allChecked,setAllChecked] = useState(false);
     const [disabled, setDisabled] = useState(true);
     const checkAll = function(){
-        allChecked? setAllChecked(false):setAllChecked(true);
+        filterData.map(item => {
+            item.checked = item.check? false:true;
+        })
     }
+    
+    // 初始页面渲染及页面大小更改区
+    const totalPageNums = (pageSize: number) => {
+        return (Math.ceil(newMockData.length/pageSize))
+    }
+    // const changPageSize
+    const pageNumbers = totalPageNums(pageSize);
+   
+    // 页数更改功能区
+    const pageNumsFliter = (pageNums: number,data: any[]) =>{
+        const retArr: any[] = [];
+        for(let i = 0;i <data.length ;i++){
+            ((i >= (pageNums-1)*pageSize)&&(i < pageNums*pageSize))? retArr.push(data[i]):false;
+        }
+        return retArr;
+    }
+    const [pageNumsFilterData,setPageNumsFilterData] = useState(pageNumsFliter(pageNums,filterData));
+    // let pageNumsFilterData = pageNumsFliter(pageNums,filterData);
+
+    const pageNumSubtract = function(){
+        const pageNumsS = pageNums-1;
+        (pageNums>1)? setPageNums(pageNumsS): false;
+    }
+    const pageNumPlus = function(){
+        const pageNumsP = pageNums+1;
+        (pageNums<pageNumbers)? setPageNums(pageNumsP): false;
+    }
+
+
+    // 左右穿梭框穿梭功能区
+    const moveData: any[] = [];
     const checked = function(e:any){
         if(moveData.length===0){
             setDisabled(true);
@@ -42,42 +83,8 @@ const Search = () => {
         }
     }
 
-    // 初始页面渲染及页面大小更改区
-    const [pageSize, setPageSize] = useState(1);
-    const pageNums = (pageSize: number) => {
-        return (Math.ceil(20/pageSize))
-    }
-    const pageNumSubtract = function(){
-        let nums = pageSize;
-        nums--;
-        // setPageSize(nums);
-    }
-    const pageNumbers = pageNums(pageSize);
-   
-    // 页数更改功能区
-    const [inputNums, setInputNums] = useState(1);
-
-
-
-
-    // 左右穿梭框穿梭功能区
-    let moveData: any[] = [];
-    const moveToSecond = function(){
-        // eslint-disable-next-line array-callback-return
-        moveData.map(moveItem => {
-            // eslint-disable-next-line array-callback-return
-            filterData.map(filterItem => {
-                if(moveItem === filterItem){
-                    filterData.splice(Number(moveItem.key),1)
-                }
-            })
-        })
-        moveData = [];
-    }
-    const moveback = function(){
-        //
-    }
     const checkAndTransfer = function(event:any,item:any){
+        // console.log(event.target.checked);
         if (event.target.checked){
             moveData.push(item);
             item.move = true;
@@ -85,9 +92,22 @@ const Search = () => {
             moveData.splice(item.key,1)
             item.move = false;
         }
+        // console.log("moveData", moveData)
         checked(event);
-        console.log(filterData);
     }
+
+    const moveToSecond = function(){
+        let arr = pageNumsFilterData;
+        arr = arr.filter(item => {
+            return item.move!==true;
+        })
+        setPageNumsFilterData(arr);
+        // pageNumsFilterData = arr;
+    }
+    const moveback = function(){
+        //
+    }
+    
 
     return (
         <div className='transfer'>
@@ -101,6 +121,7 @@ const Search = () => {
                     value={inputValue}
                     onChange={e => {
                         setInputValue(e.target.value);
+                        filterData = filters(newMockData,inputValue,pageNums);
                     }}
                 />
 
@@ -115,8 +136,9 @@ const Search = () => {
                                 <input 
                                     type="checkbox" 
                                     value={item.value} 
-                                    checked={allChecked}
+                                    // checked={item.checked}
                                     onChange={e => {
+                                        // item.check = item.check? false: true;
                                         checkAndTransfer(e,item)
                                     }}
                                 />
@@ -134,16 +156,21 @@ const Search = () => {
           
             {/* 分页功能区 */}
             <div className='pagination'>
-                <div className='pageLeft' onClick={pageNumSubtract}>
-              &lt;
+                <div className='pageSubtract' onClick={pageNumSubtract}>
+                    &lt;
                 </div>
                 <input
-                    type="text"
-                    value={inputNums}
+                    type="number"
+                    className='paginationInput'
+                    value={pageNums}
                     onChange={e => {
-                        setInputNums(Number(e.target.value));
+                        setPageNums(Number(e.target.value));
                     }}
                 />
+                /{pageNumbers}页
+                <div className='pagePlus' onClick={pageNumPlus}>
+                    &gt;
+                </div>
             </div>
         </div>
     );
